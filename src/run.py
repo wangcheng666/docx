@@ -51,9 +51,20 @@ class Run:
         """
         根据文本对象更新文本相关属性
         """
+        # 更新文本
         self._text = ""
         for text in self._texts:
             self._text += text.text
+        # 更新 XML 表示
+        xml_tree = ET.fromstring(self._xml)
+        for child in xml_tree:
+            if child.tag.endswith('t'):
+                xml_tree.remove(child)
+
+        for t in self._texts:
+            t_element = t.to_xml()
+            xml_tree.append(t_element)
+        self._xml = ET.tostring(xml_tree, encoding='unicode')
 
     def _rpr_update(self):
         """
@@ -94,15 +105,10 @@ class Run:
         self._text = ""
         self._texts = []
         for text in texts:
-            is_preserve_space = text.get('{http://www.w3.org/XML/1998/namespace}space') == 'preserve'
-            if is_preserve_space:
-                t = text.text if text.text else ''
-                self._text += t
-                self._texts.append(Text(t))
-            else:
-                t = (text.text or '').strip()
-                self._text += t
-                self._texts.append(Text(t))
+            t = text.text if text.text else ''
+            self._text += t
+            self._texts.append(Text(t))
+
 
         # 更新文本属性
         rpr = xml_tree.find('.//w:rPr', NAMESPACES)
@@ -110,13 +116,13 @@ class Run:
             self._rpr = RunProperties.load_from_xml(rpr)
 
     @classmethod
-    def from_xml(cls, xml: ET.Element):
+    def load_from_xml(cls, xml: ET.Element):
         run = cls()
         run.xml = ET.tostring(xml, encoding='unicode')
-
         return run
 
     @classmethod
     def from_xml_str(cls, xml: str):
-        root = ET.fromstring(xml)
-        return cls.from_xml(root)
+        run = cls()
+        run.xml = xml
+        return run

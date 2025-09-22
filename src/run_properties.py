@@ -2,7 +2,7 @@
     
 
 from dataclasses import dataclass
-from app.core.doc_inspection.base.font import Font
+from font import Font
 import xml.etree.ElementTree as ET
 
 @dataclass
